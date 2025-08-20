@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Simple Family Manager</title>
-<head>
+    <title>{{ title }} - Simple Family Manager</title>
+</head>
 <body>
 <nav>
     <a href="{{ url_for('index') }}">Strona Główna</a>
@@ -24,5 +24,21 @@
     </ul>
     {% endif %}
     {% endwith %}
+
+    <h1>Formularz Logowania</h1>
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.email.label }}<br>
+            {{ form.email(size=32) }}
+        </p>
+        <p>
+            {{ form.password.label }}<br>
+            {{ form.password(size=32) }}
+        </p>
+        <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    <p>Nie masz konta? <a href="{{ url_for('register') }}">Zarejestruj się!</a></p>
 </body>
 </html>
