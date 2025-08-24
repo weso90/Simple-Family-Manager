@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }} - Simple Family Manager</title>
+</head>
+<body>
+    <nav>
+        ...
+    </nav>
+    <hr>
+    
+    <h1>Utwórz nową grupę rodzinną</h1>
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.name.label }}<br>
+            {{ form.name(size=32) }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+</body>
+</html>

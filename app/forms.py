@@ -20,4 +20,6 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Zaloguj')
 
 
-    
+class CreateGroupForm(FlaskForm):
+    name = StringField('Nazwa Grupy', validators=[DataRequired()])
+    submit = SubmitField('Stwórz Grupę')

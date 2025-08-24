@@ -1,13 +1,17 @@
 from flask import render_template, flash, redirect, url_for
 from app import app, db
-from app.forms import RegistrationForm, LoginForm
-from app.models import User
+from app.forms import RegistrationForm, LoginForm, CreateGroupForm
+from app.models import User, GroupMember, FamilyGroup
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, current_user, login_required
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    groups = []
+    if current_user.is_authenticated:
+        memberships = current_user.group_memberships
+        groups = [membership.group for membership in memberships]
+    return render_template("index.html", title='Strona główna', groups=groups)
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -52,3 +56,22 @@ def logout():
     logout_user()
     flash('Zostałeś pomyślnie wylogowany')
     return redirect(url_for('index'))
+
+@app.route('/create_group', methods=['GET', 'POST'])
+@login_required
+def create_group():
+    form = CreateGroupForm()
+    new_group = FamilyGroup(name=form.name.data)
+    if form.validate_on_submit():
+        family_group = FamilyGroup(name=form.name.data)
+        new_membership = GroupMember(
+            user=current_user,
+            group=new_group,
+            role='admin')
+        db.session.add(new_group)
+        db.session.add(new_membership)
+        db.session.commit()
+
+        flash(f"Grupa została utworzona.", 'success')
+        return redirect(url_for("index"))
+    return render_template('create_group.html', title="Utwórz grupę", form=form)

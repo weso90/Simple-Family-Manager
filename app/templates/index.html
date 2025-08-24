@@ -24,5 +24,19 @@
     </ul>
     {% endif %}
     {% endwith %}
+<hr>
+{% if current_user.is_authenticated %}
+    <h2>Twoje grupy rodzinne:</h2>
+    <a href="{{ url_for('create_group') }}">Stwórz nową grupę</a>
+
+    <ul>
+        {% for group in groups %}
+            <li>{{ group.name }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <h1>Witaj w Simple Family Manager!</h1>
+    <p>Zaloguj się lub zarejestruj, aby zacząć zarządzać swoją rodziną.</p>
+{% endif %}
 </body>
 </html>
