@@ -63,7 +63,6 @@ def create_group():
     form = CreateGroupForm()
     new_group = FamilyGroup(name=form.name.data)
     if form.validate_on_submit():
-        family_group = FamilyGroup(name=form.name.data)
         new_membership = GroupMember(
             user=current_user,
             group=new_group,
