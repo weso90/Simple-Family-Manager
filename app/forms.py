@@ -23,3 +23,7 @@ class LoginForm(FlaskForm):
 class CreateGroupForm(FlaskForm):
     name = StringField('Nazwa Grupy', validators=[DataRequired()])
     submit = SubmitField('Stwórz Grupę')
+
+class AddMemberForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Dodaj członka')

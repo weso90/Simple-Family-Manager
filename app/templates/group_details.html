@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>{{ group.name }}</h1>
+    <ul>
+        {% for member_association in group.members %}
+            <li>{{ member_association.user.email }}</li>
+        {% endfor %}
+    </ul>
+    {% if current_role == 'admin' %}
+    <h1>Dodaj użytkownika do grupy</h1>
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+
+        <p>
+            {{ form.email.label }}<br>
+            {{ form.email(size=32) }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    {% else %}
+    {% endif %}
+{% endblock %}
