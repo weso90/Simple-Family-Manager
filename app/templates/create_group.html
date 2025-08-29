@@ -1,14 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ title }} - Simple Family Manager</title>
-</head>
-<body>
-    <nav>
-        ...
-    </nav>
-    <hr>
-    
+{% extends "base.html" %}
+
+{% block content %}
     <h1>Utwórz nową grupę rodzinną</h1>
     <form action="" method="post">
         {{ form.hidden_tag() }}
@@ -18,5 +10,4 @@
         </p>
         <p>{{ form.submit() }}</p>
     </form>
-</body>
-</html>
+{% endblock %}
