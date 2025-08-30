@@ -61,8 +61,8 @@ def logout():
 @login_required
 def create_group():
     form = CreateGroupForm()
-    new_group = FamilyGroup(name=form.name.data)
     if form.validate_on_submit():
+        new_group = FamilyGroup(name=form.name.data)
         new_membership = GroupMember(
             user=current_user,
             group=new_group,
