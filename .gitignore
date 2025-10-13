@@ -12,3 +12,7 @@ __pycache__/
 *.tmp
 
 instance/
+
+.env
+.flaskenv
+*.db

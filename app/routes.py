@@ -15,18 +15,36 @@ def index():
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
+    #przekierowanie zalogowanych użytkowników, aby nie rejestrowali nowego konta
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+
     form = RegistrationForm()
     if form.validate_on_submit():
-        hashed_password = generate_password_hash(form.password.data)
-        user = User(email=form.email.data, password=hashed_password)
+        #sprawdzenie czy email już istnieje
+        existing_user = User.query.filter_by(email=form.email.data).first()
+        if existing_user:
+            flash('Ten adres email jest już zarejestrowany. Spróbuj się zalogować.', 'warning')
+            return redirect(url_for('register'))
+        
+        #dodane na wypadek innych błędów DB
+        try:
+            hashed_password = generate_password_hash(form.password.data)
+            user = User(email=form.email.data, password=hashed_password)
 
-        db.session.add(user)
-        db.session.commit()
+            db.session.add(user)
+            db.session.commit()
 
-        flash(f"Twoje konto zostało pomyślnie utworzone. Możesz się teraz zalogować.")
-        return redirect(url_for("index"))
+            flash('Twoje konto zostało pomyślnie utworzone. Możesz się teraz zalogować')
+            return redirect(url_for('login'))
+        
+        except Exception as e:
+            db.session.rollback() #cofnięcie zmian po błędzie
+            flash('Wystąpił błąd podczas rejestracji. Spróbuj ponownie.', 'danger')
+            # w produkcji logij błąd do pliku
+            #logger.error(f"Registration error: {e})
 
-    return render_template("register.html", title="rejestracja", form=form)
+    return render_template("register.html", title="Rejestracja", form=form)
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -62,17 +80,22 @@ def logout():
 def create_group():
     form = CreateGroupForm()
     if form.validate_on_submit():
-        new_group = FamilyGroup(name=form.name.data)
-        new_membership = GroupMember(
-            user=current_user,
-            group=new_group,
-            role='admin')
-        db.session.add(new_group)
-        db.session.add(new_membership)
-        db.session.commit()
+        try:
+            new_group = FamilyGroup(name=form.name.data)
+            new_membership = GroupMember(
+                user=current_user,
+                group=new_group,
+                role='admin')
+            db.session.add(new_group)
+            db.session.add(new_membership)
+            db.session.commit()
 
-        flash(f"Grupa została utworzona.", 'success')
-        return redirect(url_for("index"))
+            flash(f'Grupa "{new_group.name}" została utworzona.', 'success')
+            return redirect(url_for('group_details', group_id=new_group.id))
+        except Exception as e:
+            db.session.rollback()
+            flash('Wystąpił błąd podczas tworzenia grupy. Spróbuj ponownie.', 'danger')
+
     return render_template('create_group.html', title="Utwórz grupę", form=form)
 
 @app.route('/group/<int:group_id>', methods=['GET', 'POST'])
@@ -86,19 +109,31 @@ def group_details(group_id):
         group_id=group.id
     ).first()
 
+    if not current_membership:
+        flash('Nie masz dostępu do tej grupy.', 'danger')
+        return redirect(url_for('index'))
+
     if form.validate_on_submit():
+        if current_membership.role != 'admin':
+            flash('Tylko administrator grupy może dodawać członków.', 'warning')
+            return redirect(url_for('group_details', group_id=group_id))
+        
         user_to_add = User.query.filter_by(email=form.email.data).first()
 
         if not user_to_add:
             flash('Użytkownik o tym adresie email nie istnieje.', 'danger')
         elif user_to_add in [m.user for m in group.members]:
-            flash('Ten użytkownik jest już członkiem tej grupy', 'warning')
+            flash('Ten użytkownik jest już członkiem tej grupy.', 'warning')
         else:
-            new_membership = GroupMember(user=user_to_add, group=group, role='member')
-            db.session.add(new_membership)
-            db.session.commit()
-            flash(f'Użytkownik {user_to_add.email} został dodany do grupy', 'success')
-        return redirect(url_for('group_details', group_id=group.id))
+            #try-except przy dodawaniu członka
+            try:
+                new_membership = GroupMember(user=user_to_add, group=group, role='member')
+                db.session.add(new_membership)
+                db.session.commit()
+                flash(f'Użytkownik {user_to_add.email} został dodany do grupy.', 'success')
+            except:
+                db.session.rollback()
+                flash('Wystąpił błąd podczas dodawania członka.', 'danger')
 
-    return render_template('group_details.html', title=group.name, group=group, form=form,
-                           current_role=current_membership.role if current_membership else None)
+        return redirect(url_for('group_details', group_id=group.id))
+    return render_template('group_details.html', title=group.name, group=group, form=form, current_role=current_membership.role)
