@@ -247,7 +247,7 @@ def edit_group(group_id):
             db.session.commit()
 
             flash(f'Nazwa grupy zmieniona z "{old_name}" na "{group.name}".', 'success')
-            return redirect(url_for('group_details,', group_id=group.id))
+            return redirect(url_for('group_details', group_id=group.id))
         
         except Exception as e:
             db.session.rollback()
@@ -257,9 +257,12 @@ def edit_group(group_id):
     if not form.is_submitted():
         form.name.data = group.name
 
-    return render_template('edit_group.html', )
+    return render_template('edit_group.html',
+                           title=f'Edytuj - {group.name}',
+                           form=form,
+                           group=group)
 
-@app.route('/group/<int:group_id/remove_member/<int:user_id>', methods=['POST'])
+@app.route('/group/<int:group_id>/remove_member/<int:user_id>', methods=['POST'])
 @login_required
 def remove_member(group_id, user_id):
     """
@@ -282,7 +285,7 @@ def remove_member(group_id, user_id):
     #znajdź członkostwo do usunięcia
     membership_to_remove = GroupMember.query.filter_by(
         user_id=user_id,
-        grupy_id=group_id
+        group_id=group_id
     ).first_or_404()
 
     # nie pozwól usunąć siebie jeśli jesteś jedynym adminem
