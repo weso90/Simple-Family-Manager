@@ -35,7 +35,7 @@ def register():
             db.session.add(user)
             db.session.commit()
 
-            flash('Twoje konto zostało pomyślnie utworzone. Możesz się teraz zalogować')
+            flash('Twoje konto zostało pomyślnie utworzone. Możesz się teraz zalogować', 'success')
             return redirect(url_for('login'))
         
         except Exception as e:
@@ -72,7 +72,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('Zostałeś pomyślnie wylogowany')
+    flash('Zostałeś pomyślnie wylogowany', 'success')
     return redirect(url_for('index'))
 
 @app.route('/create_group', methods=['GET', 'POST'])
@@ -131,9 +131,10 @@ def group_details(group_id):
                 db.session.add(new_membership)
                 db.session.commit()
                 flash(f'Użytkownik {user_to_add.email} został dodany do grupy.', 'success')
-            except:
+            except Exception  as e:
                 db.session.rollback()
                 flash('Wystąpił błąd podczas dodawania członka.', 'danger')
+                # W produkcji: app.logger.error(f"Add member error: {e}")
 
         return redirect(url_for('group_details', group_id=group.id))
     return render_template('group_details.html', title=group.name, group=group, form=form, current_role=current_membership.role)

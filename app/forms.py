@@ -9,11 +9,26 @@ class RegistrationForm(FlaskForm):
     password = PasswordField('Hasło',
                              validators=[
                                  DataRequired(),
-                                 Length(min=8, message='hasło musi mieć co najmniej 8 znaków.')
+                                 Length(min=8, message='Hasło musi mieć co najmniej 8 znaków.')
                              ])
     password2 = PasswordField('Powtórz Hasło',
                               validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Zarejestruj')
+
+    def validate_password(self, password):
+        """
+        Sprawdza czy hasło jest wystarczająco mocne:
+        - co najmniej jedna duża litera
+        - co najmniej jedna mała litera
+        - co najmniej jedna cyfra
+        """
+
+        if not re.search(r'[A-Z]', password.data):
+            raise ValidationError('Hasło musi zawierać co najmniej jedną dużą literę')
+        if not re-search(r'[a-z]', password.data):
+            raise ValidationError('Hasło musi zawierać co najmniej jedną małą literę')
+        if not re.search(r'\d', password.data):
+            raise ValidationError('Hasło musi zawierać co najmniej jedną cyfrę')
 
 class LoginForm(FlaskForm):
     email = StringField('Email',
