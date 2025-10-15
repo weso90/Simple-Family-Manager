@@ -1,11 +1,22 @@
+"""
+Formularze WTForms dla aplikacji.
+
+Flask-WTF automatycznie dodaje CSRF protection do wszystkich formularzy.
+"""
+
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
 import re
 
 class RegistrationForm(FlaskForm):
+    """
+    Formularz rejestracji nowego użytkownika.
+    """
     email = StringField('Email',
                         validators=[DataRequired(), Email()])
+    
+    #minimalna długość 8 znaków + dodatkowe walidacje w validate_password()
     password = PasswordField('Hasło',
                              validators=[
                                  DataRequired(),
@@ -31,6 +42,9 @@ class RegistrationForm(FlaskForm):
             raise ValidationError('Hasło musi zawierać co najmniej jedną cyfrę')
 
 class LoginForm(FlaskForm):
+    """
+    Formularz logowania.
+    """
     email = StringField('Email',
                         validators=[DataRequired(), Email()])
     password = PasswordField('Hasło',
@@ -40,6 +54,11 @@ class LoginForm(FlaskForm):
 
 
 class CreateGroupForm(FlaskForm):
+    """
+    Formularz tworzenia nowej grupy rodzinnej.
+    """
+
+    # 5-15 znaków - można zmienić w przyszłości
     name = StringField('Nazwa Grupy',
                        validators=[
                            DataRequired(),
@@ -48,5 +67,8 @@ class CreateGroupForm(FlaskForm):
     submit = SubmitField('Stwórz Grupę')
 
 class AddMemberForm(FlaskForm):
+    """
+    Formularz dodawania członka do grupy (tylko dla adminów).
+    """
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Dodaj członka')
