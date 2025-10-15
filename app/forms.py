@@ -72,3 +72,16 @@ class AddMemberForm(FlaskForm):
     """
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Dodaj członka')
+
+class EditGroupForm(FlaskForm):
+    """
+    Formularz edycji nazwy grupy (tylko dla adminów)
+    """
+
+    name = StringField('Nowa nazwa grupy',
+                        validators=[
+                            DataRequired(),
+                            Length(min=5, max=15, message='Nazwa grupy musi mieć od 5 do 15 znaków')
+                        ])
+    
+    submit = SubmitField('Zapisz zmiany')

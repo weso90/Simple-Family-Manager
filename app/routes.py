@@ -11,7 +11,7 @@ Każda trasa obsługuje:
 
 from flask import render_template, flash, redirect, url_for
 from app import app, db
-from app.forms import RegistrationForm, LoginForm, CreateGroupForm, AddMemberForm
+from app.forms import RegistrationForm, LoginForm, CreateGroupForm, AddMemberForm, EditGroupForm
 from app.models import User, GroupMember, FamilyGroup
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, current_user, login_required
@@ -214,3 +214,98 @@ def group_details(group_id):
     
     # Renderuj szablon z danymi grupy
     return render_template('group_details.html', title=group.name, group=group, form=form, current_role=current_membership.role)
+
+@app.route('/group/<int:group_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_group(group_id):
+    """
+    Edycja nazwy grupy (tylko admin)
+    """
+
+    form = EditGroupForm()
+    group = FamilyGroup.query.get_or_404(group_id)
+
+    #sprawdź czy użytkownik należy do grupy
+    current_membership = GroupMember.query.filter_by(
+        user_id=current_user.id,
+        group_id=group.id
+    ).first()
+
+    if not current_membership:
+        flash('Nie masz dostępu do tej grupy', 'danger')
+        return redirect(url_for('index'))
+    
+    #tylko admin może edytować
+    if current_membership.role != 'admin':
+        flash('Tylko administrator może edytować grupę.', 'warning')
+        return redirect(url_for('group_details', group_id=group.id))
+    
+    if form.validate_on_submit():
+        try:
+            old_name = group.name
+            group.name = form.name.data
+            db.session.commit()
+
+            flash(f'Nazwa grupy zmieniona z "{old_name}" na "{group.name}".', 'success')
+            return redirect(url_for('group_details,', group_id=group.id))
+        
+        except Exception as e:
+            db.session.rollback()
+            flash('Wystąpił błąd podczas edycji grupy.', 'danger')
+
+    #wypełnij formularz obecną nazwą
+    if not form.is_submitted():
+        form.name.data = group.name
+
+    return render_template('edit_group.html', )
+
+@app.route('/group/<int:group_id/remove_member/<int:user_id>', methods=['POST'])
+@login_required
+def remove_member(group_id, user_id):
+    """
+    Usuwanie członka z grupy (tylko administrator).
+
+    Nie można usunąć ostatniego admina
+    """
+    group = FamilyGroup.query.get_or_404(group_id)
+
+    #sprawdź czy current_user jest adminem
+    current_membership = GroupMember.query.filter_by(
+        user_id=current_user.id,
+        group_id=group.id
+    ).first()
+
+    if not current_membership or current_membership.role != 'admin':
+        flash('Tylko administrator może usuwać członków.', 'warning')
+        return redirect(url_for('group_details', group_id=group.id))
+    
+    #znajdź członkostwo do usunięcia
+    membership_to_remove = GroupMember.query.filter_by(
+        user_id=user_id,
+        grupy_id=group_id
+    ).first_or_404()
+
+    # nie pozwól usunąć siebie jeśli jesteś jedynym adminem
+    if user_id == current_user.id:
+        #sprawdź czy są inni admini
+        admin_count = GroupMember.query.filter_by(
+            group_id=group_id,
+            role='admin'
+        ).count()
+
+        if admin_count <= 1:
+            flash('Nie możesz usunąć siebie - jesteś jedynym administratorem grupy.', 'warning')
+            return redirect(url_for('group_details', group_id=group.id))
+        
+    try:
+        user_email = membership_to_remove.user.email
+        db.session.delete(membership_to_remove)
+        db.session.commit()
+
+        flash(f'Użytkownik {user_email} został usunięty z grupy', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash('Wystąpił błąd podczas usuwania członka.', 'danger')
+
+    return redirect(url_for('group_details', group_id=group.id))

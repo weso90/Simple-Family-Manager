@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Edytuj grupę</h1>
+    <p><a href="{{ url_for('group_details', group_id=group.id) }}">← Powrót do grupy</a></p>
+    
+    <form method="post">
+        {{ form.hidden_tag() }}
+        
+        <p>
+            {{ form.name.label }}<br>
+            {{ form.name(size=32) }}
+            {% if form.name.errors %}
+                <ul style="color: red;">
+                {% for error in form.name.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+        
+        <p>{{ form.submit() }}</p>
+    </form>
+{% endblock %}
