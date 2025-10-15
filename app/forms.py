@@ -25,7 +25,7 @@ class RegistrationForm(FlaskForm):
 
         if not re.search(r'[A-Z]', password.data):
             raise ValidationError('Hasło musi zawierać co najmniej jedną dużą literę')
-        if not re-search(r'[a-z]', password.data):
+        if not re.search(r'[a-z]', password.data):
             raise ValidationError('Hasło musi zawierać co najmniej jedną małą literę')
         if not re.search(r'\d', password.data):
             raise ValidationError('Hasło musi zawierać co najmniej jedną cyfrę')
