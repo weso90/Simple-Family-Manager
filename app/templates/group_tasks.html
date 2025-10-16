@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Zadania: {{ group.name }}</h1>
+    <p><a href="{{ url_for('group_details', group_id=group.id) }}">Powrót do grupy</a></p>
+    
+    <hr>
+    
+    <h2>Lista zadań</h2>
+    
+    {% if tasks %}
+        <ul style="list-style: none; padding: 0;">
+        {% for task in tasks %}
+            <li style="margin: 15px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; {% if task.is_completed %}background-color: #f0f0f0;{% endif %}">
+                <form method="post" action="{{ url_for('toggle_task', task_id=task.id) }}" style="display: inline;">
+                    <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %}>
+                </form>
+                
+                <strong style="{% if task.is_completed %}text-decoration: line-through; color: #999;{% endif %}">
+                    {{ task.title }}
+                </strong>
+                
+                {% if task.description %}
+                    <br><small>{{ task.description }}</small>
+                {% endif %}
+                
+                <br>
+                <small>
+                    Przypisane: 
+                    {% if task.assigned_to %}
+                        {{ task.assigned_to.email }}
+                    {% else %}
+                        <em>Nieprzypisane</em>
+                    {% endif %}
+                    | Utworzone przez: {{ task.created_by.email }}
+                    | Data: {{ task.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </small>
+                
+                {% if current_role == 'admin' or task.created_by_id == current_user.id %}
+                    <form method="post" action="{{ url_for('delete_task', task_id=task.id) }}" style="display: inline; float: right;">
+                        <button type="submit" onclick="return confirm('Czy na pewno chcesz usunąć to zadanie?');" style="color: red; background: none; border: none; cursor: pointer;">
+                            Usuń
+                        </button>
+                    </form>
+                {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p><em>Brak zadań. Dodaj pierwsze zadanie poniżej!</em></p>
+    {% endif %}
+    
+    <hr>
+    
+    <h2>Dodaj nowe zadanie</h2>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        
+        <p>
+            {{ form.title.label }}<br>
+            {{ form.title(size=50) }}
+            {% if form.title.errors %}
+                <ul style="color: red;">
+                {% for error in form.title.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+        
+        <p>
+            {{ form.description.label }}<br>
+            {{ form.description(rows=3, cols=50) }}
+            {% if form.description.errors %}
+                <ul style="color: red;">
+                {% for error in form.description.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        </p>
+        
+        <p>
+            {{ form.assigned_to.label }}<br>
+            {{ form.assigned_to() }}
+        </p>
+        
+        <p>{{ form.submit() }}</p>
+    </form>
+{% endblock %}

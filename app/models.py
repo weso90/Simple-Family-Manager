@@ -73,3 +73,38 @@ class FamilyGroup(db.Model):
     
     def __repr__(self):
         return f"FamilyGroup('{self.name}')"
+    
+class Task(db.Model):
+    """
+    model to-do
+
+    Każde zadanie należy do grupy i może być przypisane do członka
+    """
+    __tablename__ = 'task'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+
+    # false - do zrobienia, true - zrobione
+    is_completed = db.Column(db.Boolean, default=False, nullable=False)
+
+    # przypisanie do grupy (wymagane)
+    group_id = db.Column(db.Integer, db.ForeignKey('family_group.id'), nullable=False)
+
+    # przypisanie do użytkownika - opcjonalne
+    assigned_to_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    #kto utworzył zadanie
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # kiedy utworzone
+    created_at = db.Column(db.DateTime, default=db.func.now())
+
+    #relacje
+    group = db.relationship('FamilyGroup', backref='tasks')
+    assigned_to = db.relationship('User', foreign_keys=[assigned_to_id], backref='assigned_tasks')
+    created_by = db.relationship('User', foreign_keys=[created_by_id], backref='created_tasks')
+
+    def __repr__(self):
+        return f"Task('{self.title}', completed={self.is_completed})"

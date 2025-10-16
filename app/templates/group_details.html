@@ -2,6 +2,7 @@
 
 {% block content %}
     <h1>{{ group.name }}</h1>
+    <p><a href="{{ url_for('group_tasks', group_id=group.id) }}">Zobacz zadania</a></p>
     
     {% if current_role == 'admin' %}
         <p>

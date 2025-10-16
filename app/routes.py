@@ -9,10 +9,11 @@ Każda trasa obsługuje:
 5. Przekierowania
 """
 
+from enum import member
 from flask import render_template, flash, redirect, url_for
 from app import app, db
-from app.forms import RegistrationForm, LoginForm, CreateGroupForm, AddMemberForm, EditGroupForm
-from app.models import User, GroupMember, FamilyGroup
+from app.forms import RegistrationForm, LoginForm, CreateGroupForm, AddMemberForm, EditGroupForm, CreateTaskForm
+from app.models import User, GroupMember, FamilyGroup, Task
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, current_user, login_required
 
@@ -312,3 +313,128 @@ def remove_member(group_id, user_id):
         flash('Wystąpił błąd podczas usuwania członka.', 'danger')
 
     return redirect(url_for('group_details', group_id=group.id))
+
+@app.route('/group/<int:group_id>/tasks', methods=['GET', 'POST'])
+@login_required
+def group_tasks(group_id):
+    """
+    Lista zadań grupy + dodawanie nowych.
+    """
+    form = CreateTaskForm()
+    group = FamilyGroup.query.get_or_404(group_id)
+
+    #autoryzacja - spraweź czy user należy do grupy
+    current_membership = GroupMember.query.filter_by(
+        user_id=current_user.id,
+        group_id=group.id
+    ).first()
+
+    if not current_membership:
+        flash('Nie masz dostępu do tej grupy.', 'danger')
+        return redirect(url_for('index'))
+    
+    #wypełnij wybory dla select - wszyscy członkowie grupy + "nikt"
+    members = [(0, '-- Nieprzypisane --')]
+    for m in group.members:
+        members.append((m.user.id, m.user.email))
+    form.assigned_to.choices = members
+
+    #obsługa tworzenia zadania
+    if form.validate_on_submit():
+        try:
+            assigned_user_id = form.assigned_to.data if form.assigned_to.data != 0 else None
+
+            new_task = Task(
+                title=form.title.data,
+                description=form.description.data,
+                group_id=group.id,
+                assigned_to_id=assigned_user_id,
+                created_by_id=current_user.id
+            )
+            db.session.add(new_task)
+            db.session.commit()
+
+            flash(f'Zadanie "{new_task.title}" zostało dodane.', 'success')
+            return redirect(url_for('group_tasks', group_id=group.id))
+        except Exception as e:
+            db.session.rollback()
+            flash('Wystąpił błąd podczas dodawania zadania', 'danger')
+
+    #pobierz wszystkie zadania grupy
+    tasks = Task.query.filter_by(group_id=group.id).order_by(
+        Task.is_completed.asc(),
+        Task.created_at.desc()
+    ).all()
+
+    return render_template('group_tasks.html',
+                           title=f'Zadania - {group.name}',
+                           group=group,
+                           tasks=tasks,
+                           form=form,
+                           current_role=current_membership.role)
+
+@app.route('/task/<int:task_id>/toggle', methods=['POST'])
+@login_required
+def toggle_task(task_id):
+    """
+    Oznacz zadanie jako zrobione/niezrobione.
+    """
+    task = Task.query.get_or_404(task_id)
+
+    #sprawdź autoryzację
+    membership = GroupMember.query.filter_by(
+        user_id=current_user.id,
+        group_id=task.group_id
+    ).first()
+
+    if not membership:
+        flash('Nie masz dostępu do tego zadania.', 'danger')
+        return redirect(url_for('index'))
+    
+    try:
+        task.is_completed = not task.is_completed
+        db.session.commit()
+
+        status = "ukończone" if task.is_completed else "do zrobienia"
+        flash(f'Zadanie "{task.title}" oznaczone jako {status}.', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash('Wystąpił błąd podczas aktualizacji zadania', 'danger')
+
+    return redirect(url_for('group_tasks', group_id=task.group_id))
+
+@app.route('/task/<int:task_id>/delete', methods=['POST'])
+@login_required
+def delete_task(task_id):
+    """
+    Usuń zadanie. (tylko admin lub twórca)
+    """
+    task = Task.query.get_or_404(task_id)
+
+    #sprawdź autoryzację
+    membership = GroupMember.query.filter_by(
+        user_id=current_user.id,
+        group_id=task.group.id
+    ).first()
+
+    if not membership:
+        flash('Nie masz dostępu do tego zadania', 'danger')
+        return redirect(url_for('index'))
+    
+    #tylko admin lub twórca może usunąć
+    if membership.role != 'admin' and task.created_by_id != current_user.id:
+        flash('Tylko administrator lub twórca zadania może je usunąć', 'warning')
+        return redirect(url_for('group_tasks', group_id=task.group_id))
+    
+    try:
+        group_id = task.group_id
+        db.session.delete(task)
+        db.session.commit()
+        flash(f'Zadanie "{task.title}" zostało usunięte', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash('Wystąpił błąd podczas usuwania zadania', 'danger')
+
+    return redirect(url_for('group_tasks', group_id=group_id))

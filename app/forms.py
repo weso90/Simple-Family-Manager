@@ -5,7 +5,7 @@ Flask-WTF automatycznie dodaje CSRF protection do wszystkich formularzy.
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
 import re
 
@@ -85,3 +85,21 @@ class EditGroupForm(FlaskForm):
                         ])
     
     submit = SubmitField('Zapisz zmiany')
+
+class CreateTaskForm(FlaskForm):
+    """
+    Formularz tworzenia nowego zadania.
+    """
+    title = StringField('Tytuł zadania',
+                        validators=[
+                            DataRequired(),
+                            Length(min=5, max=200, message='Tytuł musi mieć od 5 do 200 znaków')
+                        ])
+    
+    description = TextAreaField('Opis (opcjonalnie)',
+                                validators=[Length(max=1000)])
+    
+    #to wypełniamy dynamicznie w trasie
+    assigned_to = SelectField('Przypisz do', coerce=int)
+
+    submit = SubmitField('Dodaj zadanie')

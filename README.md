@@ -1,4 +1,4 @@
-# Simple Family Manager (v.0.2)
+# Simple Family Manager (v.0.3)
 
 **Simple Family Manager** to aplikacja webowa napisana w Pythonie z użyciem frameworka Flask, stworzona jako projekt portfolio. Celem aplikacji jest ułatwienie organizacji życia rodzinnego poprzez dostarczenie zestawu prostych w obsłudze, współdzielonych narzędzi.
 
@@ -18,16 +18,21 @@
 * **Edycja nazwy grupy:** tylko administrator może zmienić nazwę grupy, walidacja 5-15 znaków, historia zmian w flash messages
 * **Usuwanie członków z grupy** tylko administrator może usuwać członków, ochrona (nie można usunąć ostatniego administratora), potwierdzenie przed usunięciem, role widoczne przy użytkowniku
 
+### Wersja 0.3
+
+* **Lista zadań (TODO):** tworzenie zadań w ramach grupy, przypisywanie zadań do konkretnych członków rodziny lub pozostawienie jako nieprzypisane, oznaczanie zadań jako ukończone, usuwanie zadań (administrator lub twórca zadania), data i godzina utworzenia zadania
+
 ---
 
 ## Mapa Rozwoju (Roadmap)
 
 Projekt jest aktywnie rozwijany. Planowane funkcjonalności w kolejnych wersjach to:
 
-* **v.0.3: Wspólna lista zadań (To-Do List)** - W TRAKCIE
-    * Tworzenie zadań w ramach grupy.
-    * Przypisywanie zadań do konkretnych członków rodziny.
-    * Oznaczanie zadań jako ukończone.
+* **v.0.3x: Udaskonalanie aplikacji**
+    * Więcej opcji opisu użytkownika
+    * bootstrap
+    * możliwość usuwania grupy
+    * więcej możliwości w to-do
 * **v.0.4: Wspólna lista zakupów**
     * Dynamiczne dodawanie i usuwanie produktów z listy.
     * Oznaczanie produktów jako "kupione".
@@ -37,12 +42,14 @@ Projekt jest aktywnie rozwijany. Planowane funkcjonalności w kolejnych wersjach
 
 ## Użyte technologie
 
-* **Backend:** Python, Flask
-* **Baza danych:** SQLite (za pośrednictwem Flask-SQLAlchemy)
-* **Migracje bazy danych:** Flask-Migrate (Alembic)
-* **Formularze:** Flask-WTF
-* **Autentykacja:** Flask-Login
-* **Frontend:** Prosty HTML z szablonami Jinja2
+* **Backend:** Python 3.x, Flask 3.1.1
+* **Baza danych:** SQLite (Flask-SQLAlchemy 3.1.1)
+* **Migracje:** Flask-Migrate 4.1.0 (Alembic)
+* **Formularze:** Flask-WTF 1.2.2, WTForms 3.2.1
+* **Autentykacja:** Flask-Login 0.6.3
+* **Hashowanie haseł:** Werkzeug 3.1.3
+* **Zmienne środowiskowe:** python-dotenv
+* **Frontend:** HTML5, Jinja2, podstawowy CSS
 
 ---
 
